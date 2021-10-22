@@ -1,85 +1,200 @@
-template<typename T>
-class SegTree {
-  T default_val;
-  std::function<T(const T &, const T &)> seg_merge;
-
-  std::vector<T> base;
-  std::vector<T> tree;
-
-  void build(int pos, int l, int r) {
-    if (r - l == 1) { tree[pos] = base[l]; return; }
-    int m  = l + (r - l) / 2;
-    build(pos * 2, l, m);
-    build(pos * 2 + 1, m, r);
-    tree[pos] = seg_merge(tree[pos * 2], tree[pos * 2 + 1]);
-  }
-
-  std::pair<bool, T> getRange(int pos, int ql, int qr, int l, int r) {
-    if (ql <= l and qr >= r) return {true, tree[pos]};
-    if (qr <= l or ql >= r) return {false, default_val};
-
-    int m = l + (r - l) / 2;
-    auto r1 = getRange(pos * 2, ql, qr, l, m);
-    auto r2 = getRange(pos * 2 + 1, ql, qr, m, r);
-
-    if (r1.first and r2.first) return {true, seg_merge(r1.second, r2.second)};
-    else if (r1.first) return {true, r1.second};
-    else return {true, r2.second};
-  }
-  void update(int pos, int q, int l, int r, const T& val) {
-    if (r - l == 1) { tree[pos] = val; return; }
-    int m  = l + (r - l) / 2;
-    if (m > q) update(pos * 2, q, l, m, val);
-    else update(pos * 2 + 1, q, m, r, val);
-    tree[pos] = seg_merge(tree[pos * 2], tree[pos * 2 + 1]);
-  }
-
- public:
-  SegTree(const std::vector<T>& v, const T& default_val, std::function<T(const T&, const T&)> seg_merge){
-    this->seg_merge = seg_merge;
-    this->default_val = default_val;
-    base = v;
-    tree.resize(4 * base.size(), default_val);
-    build(1, 0, base.size());
-  }
-  T getRange(int l, int r) {
-    return getRange(1, l, r, 0, base.size()).second;
-  }
-  void update(int pos, const T& val) {
-    update(1, pos, 0, base.size(), val);
-  }
-};
-
-
-Also versions for sum, min and max:
-const int INF = 1000 * 1000 * 1000;
-
-template <typename T>
-struct SegSumT : public SegTree<T> {
-  SegSumT(const std::vector<T>& v) : SegTree(v, static_cast<T>(0), [](auto a, auto b) { return a + b; }) {}
-};
-
-template <typename T>
-struct SegMinT : public SegTree<T> {
-  SegMinT(const std::vector<T>& v) : SegTree(v, -INF, [](auto a, auto b) { return std::min(a, b); }) {}
-};
-
-template <typename T>
-struct SegMaxT : public SegTree<T> {
-  SegMaxT(const std::vector<T>& v) : SegTree(v, INF, [](auto a, auto b) { return std::max(a, b); }) {}
+class segtree {
+  public:
+  struct node {
+    // don't forget to set default value (used for leaves)
+    // not necessarily neutral element!
+    ... a = ...;
+    void apply(int l, int r, ... v) {
+      ...
+    }
   };
-
-typedef SegSumT<int64_t> SegSum;
-typedef SegSumT<long double> SegSumLD;
-typedef SegSumT<double> SegSumD;
-typedef SegSumT<int> SegSumI;
-
-typedef SegMinT<int64_t> SegMin;
-typedef SegMinT<long double> SegMinLD;
-typedef SegMinT<double> SegMinD;
-typedef SegMinT<int> SegMinI;
-
-typedef SegMaxT<int64_t> SegMax;
-typedef SegMaxT<long double> SegMaxLD;
-typedef SegMaxT<double> SegMaxD;
-typedef SegMaxT<int> SegMaxI;
+  node unite(const node &a, const node &b) const {
+    node res;
+    ...
+    return res;
+  }
+  inline void push(int x, int l, int r) {
+    int y = (l + r) >> 1;
+    int z = x + ((y - l + 1) << 1);
+    // push from x into (x + 1) and z
+    ...
+/*
+    if (tree[x].add != 0) {
+      tree[x + 1].apply(l, y, tree[x].add);
+      tree[z].apply(y + 1, r, tree[x].add);
+      tree[x].add = 0;
+    }
+*/
+  }
+  inline void pull(int x, int z) {
+    tree[x] = unite(tree[x + 1], tree[z]);
+  }
+  int n;
+  vector<node> tree;
+  void build(int x, int l, int r) {
+    if (l == r) {
+      return;
+    }
+    int y = (l + r) >> 1;
+    int z = x + ((y - l + 1) << 1);
+    build(x + 1, l, y);
+    build(z, y + 1, r);
+    pull(x, z);
+  }
+  template <typename M>
+  void build(int x, int l, int r, const vector<M> &v) {
+    if (l == r) {
+      tree[x].apply(l, r, v[l]);
+      return;
+    }
+    int y = (l + r) >> 1;
+    int z = x + ((y - l + 1) << 1);
+    build(x + 1, l, y, v);
+    build(z, y + 1, r, v);
+    pull(x, z);
+  }
+  node get(int x, int l, int r, int ll, int rr) {
+    if (ll <= l && r <= rr) {
+      return tree[x];
+    }
+    int y = (l + r) >> 1;
+    int z = x + ((y - l + 1) << 1);
+    push(x, l, r);
+    node res{};
+    if (rr <= y) {
+      res = get(x + 1, l, y, ll, rr);
+    } else {
+      if (ll > y) {
+        res = get(z, y + 1, r, ll, rr);
+      } else {
+        res = unite(get(x + 1, l, y, ll, rr), get(z, y + 1, r, ll, rr));
+      }
+    }
+    pull(x, z);
+    return res;
+  }
+  template <typename... M>
+  void modify(int x, int l, int r, int ll, int rr, const M&... v) {
+    if (ll <= l && r <= rr) {
+      tree[x].apply(l, r, v...);
+      return;
+    }
+    int y = (l + r) >> 1;
+    int z = x + ((y - l + 1) << 1);
+    push(x, l, r);
+    if (ll <= y) {
+      modify(x + 1, l, y, ll, rr, v...);
+    }
+    if (rr > y) {
+      modify(z, y + 1, r, ll, rr, v...);
+    }
+    pull(x, z);
+  }
+  int find_first_knowingly(int x, int l, int r, const function<bool(const node&)> &f) {
+    if (l == r) {
+      return l;
+    }
+    push(x, l, r);
+    int y = (l + r) >> 1;
+    int z = x + ((y - l + 1) << 1);
+    int res;
+    if (f(tree[x + 1])) {
+      res = find_first_knowingly(x + 1, l, y, f);
+    } else {
+      res = find_first_knowingly(z, y + 1, r, f);
+    }
+    pull(x, z);
+    return res;
+  }
+  int find_first(int x, int l, int r, int ll, int rr, const function<bool(const node&)> &f) {
+    if (ll <= l && r <= rr) {
+      if (!f(tree[x])) {
+        return -1;
+      }
+      return find_first_knowingly(x, l, r, f);
+    }
+    push(x, l, r);
+    int y = (l + r) >> 1;
+    int z = x + ((y - l + 1) << 1);
+    int res = -1;
+    if (ll <= y) {
+      res = find_first(x + 1, l, y, ll, rr, f);
+    }
+    if (rr > y && res == -1) {
+      res = find_first(z, y + 1, r, ll, rr, f);
+    }
+    pull(x, z);
+    return res;
+  }
+  int find_last_knowingly(int x, int l, int r, const function<bool(const node&)> &f) {
+    if (l == r) {
+      return l;
+    }
+    push(x, l, r);
+    int y = (l + r) >> 1;
+    int z = x + ((y - l + 1) << 1);
+    int res;
+    if (f(tree[z])) {
+      res = find_last_knowingly(z, y + 1, r, f);
+    } else {
+      res = find_last_knowingly(x + 1, l, y, f);
+    }
+    pull(x, z);
+    return res;
+  }
+  int find_last(int x, int l, int r, int ll, int rr, const function<bool(const node&)> &f) {
+    if (ll <= l && r <= rr) {
+      if (!f(tree[x])) {
+        return -1;
+      }
+      return find_last_knowingly(x, l, r, f);
+    }
+    push(x, l, r);
+    int y = (l + r) >> 1;
+    int z = x + ((y - l + 1) << 1);
+    int res = -1;
+    if (rr > y) {
+      res = find_last(z, y + 1, r, ll, rr, f);
+    }
+    if (ll <= y && res == -1) {
+      res = find_last(x + 1, l, y, ll, rr, f);
+    }
+    pull(x, z);
+    return res;
+  }
+  segtree(int _n) : n(_n) {
+    assert(n > 0);
+    tree.resize(2 * n - 1);
+    build(0, 0, n - 1);
+  }
+  template <typename M>
+  segtree(const vector<M> &v) {
+    n = v.size();
+    assert(n > 0);
+    tree.resize(2 * n - 1);
+    build(0, 0, n - 1, v);
+  }
+  node get(int ll, int rr) {
+    assert(0 <= ll && ll <= rr && rr <= n - 1);
+    return get(0, 0, n - 1, ll, rr);
+  }
+  node get(int p) {
+    assert(0 <= p && p <= n - 1);
+    return get(0, 0, n - 1, p, p);
+  }
+  template <typename... M>
+  void modify(int ll, int rr, const M&... v) {
+    assert(0 <= ll && ll <= rr && rr <= n - 1);
+    modify(0, 0, n - 1, ll, rr, v...);
+  }
+  // find_first and find_last call all FALSE elements
+  // to the left (right) of the sought position exactly once
+  int find_first(int ll, int rr, const function<bool(const node&)> &f) {
+    assert(0 <= ll && ll <= rr && rr <= n - 1);
+    return find_first(0, 0, n - 1, ll, rr, f);
+  }
+  int find_last(int ll, int rr, const function<bool(const node&)> &f) {
+    assert(0 <= ll && ll <= rr && rr <= n - 1);
+    return find_last(0, 0, n - 1, ll, rr, f);
+  }
+};
