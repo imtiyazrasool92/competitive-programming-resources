@@ -7,4 +7,4 @@ if [ ! -f "$1.cc" ]; then
 	echo "file not found"
 	exit 0
 fi
-g++ -std=c++17 -Wshadow -Wall "$1.cc" -o  "$1" -O2 -Wno-unused-result && ./$1
+g++ -std=c++20 -Dimtiyazrasool92 -Wshadow -Wall "$1.cc" -o  "$1" -O2 -Wno-unused-result && ./$1
