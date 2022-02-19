@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+if [ -z "$*" ]; then 
+	echo "no args"
+	exit 0
+fi
+
+if [ ! -f "$1.cc" ]; then
+	echo "file not found"
+	exit 0
+fi
+
+g++-11 -Dimtiyazrasool92 -Wextra -Wshadow -Wall "$1.cc" -o  "$1" -O2 -Wno-unused-result && ./$1
