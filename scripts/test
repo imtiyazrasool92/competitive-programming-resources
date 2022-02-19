@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+if [ $# -lt 2 ]; then 
+	echo "Too few arguments"
+	exit 0
+fi
+
+if [ $# -gt 2 ]; then 
+	echo "Too many arguments"
+	exit 0
+fi
+
+./run $2 > out
+./run $1 < out
