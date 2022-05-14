@@ -3,4 +3,10 @@ if [ -z "$*" ]; then
 	echo "no args"
 	exit 0
 fi
-cp "cft.cc" "$1.cc" && sublime "$1.cc"
+
+declare -i T=$#
+
+for i in $(seq 1 $T)
+do
+	cp "cft.cc" "${!i}.cc" && sublime "${!i}.cc"
+done
