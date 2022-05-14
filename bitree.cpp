@@ -1,21 +1,30 @@
+// 0 base index
+template <typename T>
+class fenwick {
+public:
+    vector<T> fenw;
+    int n;
+    fenwick(int _n) : n(_n) {
+        fenw.resize(n);
+    }
+    // index,value
+    void update(int x, T v) {
+        while (x < n) {
+            fenw[x] += v;
+            x |= (x + 1);
+        }
+    }
+    // prefix sum till x
+    T get(int x) {
+        T v{};
+        while (x >= 0) {
+            v += fenw[x];
+            x = (x & (x + 1)) - 1;
+        }
+        return v;
+    }
+    T get_range(int l, int r) {
+        return get(r) - (l > 0 ? get(l - 1) : 0);
+    }
+};
 
-const int N = 2e5 + 10;  // limit for array size
-int n;  // array size
-int t[2 * N];
-
-void build() {  // build the tree
-  for (int i = n - 1; i > 0; --i) t[i] = t[i<<1] + t[i<<1|1];
-}
-
-void modify(int p, int value) {  // set value at position p
-  for (t[p += n] = value; p > 1; p >>= 1) t[p>>1] = t[p] + t[p^1];
-}
-
-int query(int l, int r) {  // sum on interval [l, r)
-  int res = 0;
-  for (l += n, r += n; l < r; l >>= 1, r >>= 1) {
-    if (l&1) res += t[l++];
-    if (r&1) res += t[--r];
-  }
-  return res;
-}
