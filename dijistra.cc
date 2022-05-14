@@ -1,3 +1,4 @@
+// by neal wu
 template<typename T_weight>
 struct Dijkstra {
     const T_weight W_INF = numeric_limits<T_weight>::max() / 2;
