@@ -1,1 +1,1 @@
-![Codeforces Stats Card](https://codeforces-stats-api.herokuapp.com/stats?username=imtiyazrasool92&theme=1)
+![Codeforces Stats Card](https://codeforces-stats-api.herokuapp.com/stats?username=imtiyazrasool92&theme=0)
