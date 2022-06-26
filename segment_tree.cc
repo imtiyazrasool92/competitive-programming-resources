@@ -12,7 +12,7 @@ struct segment_tree {
         N = (1 << (32 - __builtin_clz(N)));
         assert(N <= 1e6);
         funct = fun;
-        tree.resize(2 * N, default_value);
+        tree.resize(N << 1, default_value);
         build();
     }
 
@@ -21,7 +21,7 @@ struct segment_tree {
         assert(N <= 1e6);
         funct = fun;
 
-        tree.resize(2 * N, default_value);
+        tree.resize(N << 1, default_value);
         for (int i = 0; i < (int)A.size(); i++)
             tree[N + i] = A[i];
 
@@ -30,7 +30,7 @@ struct segment_tree {
 
     void build() {
         for (int i = N - 1; i >= 1; i--)
-            tree[i] = funct(tree[2 * i], tree[2 * i + 1]);
+            tree[i] = funct(tree[i << 1], tree[(i << 1) | 1]);
     }
 
     // 0 base_index
@@ -47,13 +47,13 @@ struct segment_tree {
             return default_value;
         }
         int mid = (seg_L + seg_R) / 2;
-        return funct(query(2 * node, seg_L, mid, L, R), query(2 * node + 1, mid + 1, seg_R, L, R));
+        return funct(query(node << 1, seg_L, mid, L, R), query((node << 1) | 1, mid + 1, seg_R, L, R));
     }
 
     void change(int index, T value) {
         tree[N + index] = value;
-        for (int i = (N + index) / 2; i >= 1; i /= 2)
-            tree[i] = funct(tree[2 * i], tree[2 * i + 1]);
+        for (int i = (N + index)>>1; i >= 1; i>>=1)
+            tree[i] = funct(tree[i << 1], tree[(i << 1) | 1]);
     }
 
 };
